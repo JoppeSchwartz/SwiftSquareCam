@@ -7,12 +7,21 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		D802032419D37D7500E5B92E /* squarePNG.png in Resources */ = {isa = PBXBuildFile; fileRef = D802032319D37D7500E5B92E /* squarePNG.png */; };
 		D878BF5019D19FA60090EA96 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = D878BF4F19D19FA60090EA96 /* AppDelegate.swift */; };
 		D878BF5219D19FA60090EA96 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D878BF5119D19FA60090EA96 /* ViewController.swift */; };
 		D878BF5519D19FA60090EA96 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = D878BF5319D19FA60090EA96 /* Main.storyboard */; };
 		D878BF5719D19FA60090EA96 /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = D878BF5619D19FA60090EA96 /* Images.xcassets */; };
 		D878BF5A19D19FA60090EA96 /* LaunchScreen.xib in Resources */ = {isa = PBXBuildFile; fileRef = D878BF5819D19FA60090EA96 /* LaunchScreen.xib */; };
 		D878BF6619D19FA60090EA96 /* SwiftSquareCamTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D878BF6519D19FA60090EA96 /* SwiftSquareCamTests.swift */; };
+		D878BF7019D19FE10090EA96 /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D878BF6F19D19FE10090EA96 /* AVFoundation.framework */; };
+		D878BF7219D1A9AD0090EA96 /* ImageUtil.swift in Sources */ = {isa = PBXBuildFile; fileRef = D878BF7119D1A9AD0090EA96 /* ImageUtil.swift */; };
+		D878BF7419D1A9CC0090EA96 /* CoreImage.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D878BF7319D1A9CC0090EA96 /* CoreImage.framework */; };
+		D878BF7619D1CB530090EA96 /* QuartzCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D878BF7519D1CB530090EA96 /* QuartzCore.framework */; };
+		D878BF7819D1CBA90090EA96 /* ImageIO.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D878BF7719D1CBA90090EA96 /* ImageIO.framework */; };
+		D878BF7A19D1CBC40090EA96 /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D878BF7919D1CBC40090EA96 /* CoreGraphics.framework */; };
+		D878BF7C19D1D8FD0090EA96 /* CoreMedia.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D878BF7B19D1D8FD0090EA96 /* CoreMedia.framework */; };
+		D878BF7E19D1FB550090EA96 /* AssetsLibrary.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D878BF7D19D1FB550090EA96 /* AssetsLibrary.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -26,6 +35,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		D802032319D37D7500E5B92E /* squarePNG.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = squarePNG.png; sourceTree = "<group>"; };
 		D878BF4A19D19FA60090EA96 /* SwiftSquareCam.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SwiftSquareCam.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		D878BF4E19D19FA60090EA96 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		D878BF4F19D19FA60090EA96 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
@@ -36,6 +46,14 @@
 		D878BF5F19D19FA60090EA96 /* SwiftSquareCamTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SwiftSquareCamTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		D878BF6419D19FA60090EA96 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		D878BF6519D19FA60090EA96 /* SwiftSquareCamTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftSquareCamTests.swift; sourceTree = "<group>"; };
+		D878BF6F19D19FE10090EA96 /* AVFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFoundation.framework; path = System/Library/Frameworks/AVFoundation.framework; sourceTree = SDKROOT; };
+		D878BF7119D1A9AD0090EA96 /* ImageUtil.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ImageUtil.swift; sourceTree = "<group>"; };
+		D878BF7319D1A9CC0090EA96 /* CoreImage.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreImage.framework; path = System/Library/Frameworks/CoreImage.framework; sourceTree = SDKROOT; };
+		D878BF7519D1CB530090EA96 /* QuartzCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuartzCore.framework; path = System/Library/Frameworks/QuartzCore.framework; sourceTree = SDKROOT; };
+		D878BF7719D1CBA90090EA96 /* ImageIO.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ImageIO.framework; path = System/Library/Frameworks/ImageIO.framework; sourceTree = SDKROOT; };
+		D878BF7919D1CBC40090EA96 /* CoreGraphics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreGraphics.framework; path = System/Library/Frameworks/CoreGraphics.framework; sourceTree = SDKROOT; };
+		D878BF7B19D1D8FD0090EA96 /* CoreMedia.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreMedia.framework; path = System/Library/Frameworks/CoreMedia.framework; sourceTree = SDKROOT; };
+		D878BF7D19D1FB550090EA96 /* AssetsLibrary.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AssetsLibrary.framework; path = System/Library/Frameworks/AssetsLibrary.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -43,6 +61,13 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D878BF7E19D1FB550090EA96 /* AssetsLibrary.framework in Frameworks */,
+				D878BF7C19D1D8FD0090EA96 /* CoreMedia.framework in Frameworks */,
+				D878BF7A19D1CBC40090EA96 /* CoreGraphics.framework in Frameworks */,
+				D878BF7819D1CBA90090EA96 /* ImageIO.framework in Frameworks */,
+				D878BF7619D1CB530090EA96 /* QuartzCore.framework in Frameworks */,
+				D878BF7419D1A9CC0090EA96 /* CoreImage.framework in Frameworks */,
+				D878BF7019D19FE10090EA96 /* AVFoundation.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -59,6 +84,7 @@
 		D878BF4119D19FA60090EA96 = {
 			isa = PBXGroup;
 			children = (
+				D878BF7F19D33BD60090EA96 /* Frameworks */,
 				D878BF4C19D19FA60090EA96 /* SwiftSquareCam */,
 				D878BF6219D19FA60090EA96 /* SwiftSquareCamTests */,
 				D878BF4B19D19FA60090EA96 /* Products */,
@@ -79,6 +105,7 @@
 			children = (
 				D878BF4F19D19FA60090EA96 /* AppDelegate.swift */,
 				D878BF5119D19FA60090EA96 /* ViewController.swift */,
+				D878BF7119D1A9AD0090EA96 /* ImageUtil.swift */,
 				D878BF5319D19FA60090EA96 /* Main.storyboard */,
 				D878BF5619D19FA60090EA96 /* Images.xcassets */,
 				D878BF5819D19FA60090EA96 /* LaunchScreen.xib */,
@@ -90,6 +117,7 @@
 		D878BF4D19D19FA60090EA96 /* Supporting Files */ = {
 			isa = PBXGroup;
 			children = (
+				D802032319D37D7500E5B92E /* squarePNG.png */,
 				D878BF4E19D19FA60090EA96 /* Info.plist */,
 			);
 			name = "Supporting Files";
@@ -110,6 +138,20 @@
 				D878BF6419D19FA60090EA96 /* Info.plist */,
 			);
 			name = "Supporting Files";
+			sourceTree = "<group>";
+		};
+		D878BF7F19D33BD60090EA96 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				D878BF7D19D1FB550090EA96 /* AssetsLibrary.framework */,
+				D878BF6F19D19FE10090EA96 /* AVFoundation.framework */,
+				D878BF7319D1A9CC0090EA96 /* CoreImage.framework */,
+				D878BF7B19D1D8FD0090EA96 /* CoreMedia.framework */,
+				D878BF7919D1CBC40090EA96 /* CoreGraphics.framework */,
+				D878BF7719D1CBA90090EA96 /* ImageIO.framework */,
+				D878BF7519D1CB530090EA96 /* QuartzCore.framework */,
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -194,6 +236,7 @@
 			files = (
 				D878BF5519D19FA60090EA96 /* Main.storyboard in Resources */,
 				D878BF5A19D19FA60090EA96 /* LaunchScreen.xib in Resources */,
+				D802032419D37D7500E5B92E /* squarePNG.png in Resources */,
 				D878BF5719D19FA60090EA96 /* Images.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -212,6 +255,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D878BF7219D1A9AD0090EA96 /* ImageUtil.swift in Sources */,
 				D878BF5219D19FA60090EA96 /* ViewController.swift in Sources */,
 				D878BF5019D19FA60090EA96 /* AppDelegate.swift in Sources */,
 			);
@@ -339,6 +383,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				INFOPLIST_FILE = SwiftSquareCam/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
@@ -349,6 +394,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				INFOPLIST_FILE = SwiftSquareCam/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
@@ -407,6 +453,7 @@
 				D878BF6B19D19FA60090EA96 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		D878BF6C19D19FA60090EA96 /* Build configuration list for PBXNativeTarget "SwiftSquareCamTests" */ = {
 			isa = XCConfigurationList;
@@ -415,6 +462,7 @@
 				D878BF6E19D19FA60090EA96 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};
