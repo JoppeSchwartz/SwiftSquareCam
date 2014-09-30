@@ -16,6 +16,8 @@ import AssetsLibrary
 let kCapturingStillImageProp = "capturingStillImage"
 let kOutputDataQueueName = "VideoDataOutputQueue"
 var kIsCapturingStillImageContext = UInt8()//"IsCapturingStillImageContext"
+let kFaceLayerName = "FaceLayer"
+
 
 class ViewController: UIViewController, AVCaptureVideoDataOutputSampleBufferDelegate {
     
@@ -28,7 +30,6 @@ class ViewController: UIViewController, AVCaptureVideoDataOutputSampleBufferDele
     private var _faceDetector: CIDetector!
     private var _effectiveScale: Float = 1.0
     private var _previewLayer: AVCaptureVideoPreviewLayer!
-    private var _isUsingFrontCamera = false
     private let _squareImage = UIImage(named: "squarePNG")
     private var _flashView: UIView!
     private var _detectFaces = false
@@ -89,6 +90,8 @@ class ViewController: UIViewController, AVCaptureVideoDataOutputSampleBufferDele
             takedownVideoSession()
             fatalError("Video session can't add video data output.")
         }
+        
+        //  Disable this output for now.
         _videoDataOutput.connectionWithMediaType(AVMediaTypeVideo).enabled = false
         
         //  Set up the preview layer, except for layout which can't be done yet.
@@ -145,9 +148,6 @@ class ViewController: UIViewController, AVCaptureVideoDataOutputSampleBufferDele
         //  Set up the video session and face detector.
         self.setupAVSession()
 
-        //  No face detection for now: TODO - see why the face detection starts even when the 
-        //  video output stream is set to "enabled = false".
-        _videoDataOutput.connectionWithMediaType(AVMediaTypeVideo).enabled = false
     }
     
     override func viewWillAppear(animated: Bool) {
@@ -232,6 +232,7 @@ class ViewController: UIViewController, AVCaptureVideoDataOutputSampleBufferDele
                     _previewLayer.session.removeInput(oldInput as AVCaptureInput)
                 }
                 _previewLayer.session.addInput(input)
+                _videoDataOutput.connectionWithMediaType(AVMediaTypeVideo).enabled = _detectFaces
                 _previewLayer.session.commitConfiguration()
                 break;
             }
@@ -243,7 +244,10 @@ class ViewController: UIViewController, AVCaptureVideoDataOutputSampleBufferDele
     
     @IBAction func toggleFaces(sender: UISwitch) {
         _detectFaces = sender.on
+        //  Set the video capture stream's enabled state accordingly.
+        _videoSession.beginConfiguration()
         _videoDataOutput.connectionWithMediaType(AVMediaTypeVideo).enabled = _detectFaces
+        _videoSession.commitConfiguration()
         if (_detectFaces) {
             if (_faceDetector == nil) {
                 let detectorOptions = [CIDetectorAccuracy:CIDetectorAccuracyLow]
@@ -253,7 +257,8 @@ class ViewController: UIViewController, AVCaptureVideoDataOutputSampleBufferDele
         else {
             dispatch_async(dispatch_get_main_queue(), { () -> Void in
                 // clear out any squares currently displaying.
-                self.drawFaceBoxesForFeatures([], clap: CGRect.zeroRect, orientation: UIDeviceOrientation.Portrait)
+                //self.drawFaceBoxesForFeatures([], clap: CGRect.zeroRect, orientation: UIDeviceOrientation.Portrait)
+                self.HideAllFaces()
             })
         }
     }
@@ -372,7 +377,10 @@ class ViewController: UIViewController, AVCaptureVideoDataOutputSampleBufferDele
     func captureOutput(captureOutput: AVCaptureOutput!,
         didOutputSampleBuffer sampleBuffer: CMSampleBuffer!,
         fromConnection connection: AVCaptureConnection!) {
-            
+            //  Bail early if appropriate
+            if !_detectFaces {
+                return
+            }
             let pixelBuffer: CVPixelBufferRef = CMSampleBufferGetImageBuffer(sampleBuffer)
             
             let attachmentsUnmanaged: Unmanaged<CFDictionary>! = CMCopyDictionaryOfAttachments(kCFAllocatorDefault, sampleBuffer, CMAttachmentMode(kCMAttachmentMode_ShouldPropagate))
@@ -383,10 +391,10 @@ class ViewController: UIViewController, AVCaptureVideoDataOutputSampleBufferDele
                 
                 let curDeviceOrientation = UIDevice.currentDevice().orientation
                 
-                let exifOrientation: PhotosExif0Row! = _isUsingFrontCamera ? kDeviceOrientationToExifOrientationFront[curDeviceOrientation] : kDeviceOrientationToExifOrientationBack[curDeviceOrientation]
+                let exifOrientation: PhotosExif0Row! = _isUsingFrontFacingCamera ? kDeviceOrientationToExifOrientationFront[curDeviceOrientation] : kDeviceOrientationToExifOrientationBack[curDeviceOrientation]
                 if (exifOrientation == nil) {
                     //  Handle error
-                    println("Could not get exif orientaiton for device orientation \(curDeviceOrientation.toRaw())")
+                    println("Could not get exif orientation for device orientation \(curDeviceOrientation.toRaw())")
                     return
                 }
                 let imageOptions = [CIDetectorImageOrientation: exifOrientation.toRaw()]
@@ -418,12 +426,25 @@ class ViewController: UIViewController, AVCaptureVideoDataOutputSampleBufferDele
     func captureOutput(captureOutput: AVCaptureOutput!, didDropSampleBuffer sampleBuffer: CMSampleBuffer!, fromConnection connection: AVCaptureConnection!) {
         
     }
+    
+    func HideAllFaces() {
+        // hide all the face layers
+        CATransaction.begin()
+        CATransaction.setValue(kCFBooleanTrue, forKey: kCATransactionDisableActions)
+        let sublayers = _previewLayer.sublayers as [CALayer]
+        for layer in sublayers {
+            if layer.name? == kFaceLayerName {
+                layer.hidden = true
+            }
+        }
+        CATransaction.commit()
+
+    }
 
     func drawFaceBoxesForFeatures(features: [AnyObject], clap: CGRect, orientation: UIDeviceOrientation) -> Void
     {
-        let kFaceLayerName = "FaceLayer"
         let sublayers = _previewLayer.sublayers as [CALayer]
-        
+
         CATransaction.begin()
         CATransaction.setValue(kCFBooleanTrue, forKey: kCATransactionDisableActions)
 
@@ -433,11 +454,15 @@ class ViewController: UIViewController, AVCaptureVideoDataOutputSampleBufferDele
                 layer.hidden = true
             }
         }
-        if features.count == 0 { // bail early
+        if features.count == 0 || clap == CGRect.zeroRect { // bail early
             CATransaction.commit()
             return
         }
-        
+        //  Having issues with timing in Swift - so check here if we really want to draw faces or not.
+        if !_detectFaces {
+            CATransaction.commit()
+            return
+        }
         //println("clap: \(clap)")
 
         let parentFrameSize: CGSize = previewView.frame.size
@@ -447,14 +472,9 @@ class ViewController: UIViewController, AVCaptureVideoDataOutputSampleBufferDele
         //println("Preview box: \(previewBox)")
         for item in features {
             if let ff = item as? CIFaceFeature {
-                //println("Face feature: \(ff.description)")
                 
-                // find the correct position for the square layer within the previewLayer
-                // the feature box originates in the bottom left of the video frame.
-                // (Bottom right if mirroring is turned on)
                 var faceRect: CGRect = ff.bounds
-                println("Feature bounds: \(faceRect)")
-                println("isMirrored: \(isMirrored)")
+//                println("Feature bounds: \(faceRect)")
                 
                 /*  UIKit and CoreAnimation coordinates on iOS originate at top left;
                 unmirrored CoreImage coordinates also originate at top left but flip x and y.
@@ -497,15 +517,7 @@ class ViewController: UIViewController, AVCaptureVideoDataOutputSampleBufferDele
                 //  Apply the preview origin offset, if any.
                 faceRect = CGRectOffset(faceRect, previewBox.origin.x, previewBox.origin.y)
 
-
-//                
-//                if isMirrored {
-//                    faceRect = CGRectOffset(faceRect, previewBox.origin.x + previewBox.size.width - faceRect.size.width - (faceRect.origin.x * 2), previewBox.origin.y)
-//                }
-//                else {
-//                    faceRect = CGRectOffset(faceRect, previewBox.origin.x, previewBox.origin.y)
-//                }
-                
+               
                 var featureLayer: CALayer!
                 
                 // re-use an existing layer if possible
@@ -525,7 +537,7 @@ class ViewController: UIViewController, AVCaptureVideoDataOutputSampleBufferDele
                     _previewLayer.addSublayer(featureLayer)
                 }
                 featureLayer.frame = faceRect
-                println("Set face rect to \(faceRect)")
+                //println("Set face rect to \(faceRect)")
                 
 //                switch orientation {
 //                case .Portrait:
