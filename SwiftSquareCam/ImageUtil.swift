@@ -65,7 +65,7 @@ let kDeviceOrientationToExifOrientationBack: [UIDeviceOrientation: PhotosExif0Ro
 ]
 
 func DegreesToRadians(degrees:CGFloat) -> CGFloat {
-    return degrees * CGFloat(M_1_PI) / CGFloat(180.0)
+    return degrees * CGFloat(M_PI) / CGFloat(180.0)
 }
 
 func RotationTransform(degrees:Float) -> CGAffineTransform
@@ -88,15 +88,11 @@ func ReleaseCVPPixelBuffer (pixel:UnsafeMutablePointer<Void>, data:UnsafePointer
 func CreateCGImageFromCVPixelBuffer(pixelBuffer:CVPixelBufferRef) -> CGImage!
 {
     var err: OSStatus = noErr
-    var sourcePixelFormat: OSType
-    var width, height, sourceRowBytes: size_t
-    var sourceBaseAddr: UnsafeMutablePointer<Void> = nil
     var bitmapInfo: CGBitmapInfo
-    var colorspace:CGColorSpaceRef!
-    var provider: CGDataProviderRef!
-    var image: CGImageRef!
+    var image: CGImage!
     
-    sourcePixelFormat = CVPixelBufferGetPixelFormatType( pixelBuffer )
+    CVPixelBufferLockBaseAddress( pixelBuffer, 0 );
+    var sourcePixelFormat: OSType = CVPixelBufferGetPixelFormatType( pixelBuffer )
     if ( kCVPixelFormatType_32ARGB == Int(sourcePixelFormat) ) {
         bitmapInfo = CGBitmapInfo(CGBitmapInfo.ByteOrder32Big.toRaw() | CGImageAlphaInfo.NoneSkipFirst.toRaw())
     }
@@ -104,28 +100,35 @@ func CreateCGImageFromCVPixelBuffer(pixelBuffer:CVPixelBufferRef) -> CGImage!
         bitmapInfo = CGBitmapInfo(CGBitmapInfo.ByteOrder32Little.toRaw() | CGImageAlphaInfo.NoneSkipFirst.toRaw())
     }
     else {
-        return image // -95014; // only uncompressed pixel formats
+        return nil // -95014; // only uncompressed pixel formats
     }
     
-    sourceRowBytes = CVPixelBufferGetBytesPerRow( pixelBuffer );
-    width = CVPixelBufferGetWidth( pixelBuffer );
-    height = CVPixelBufferGetHeight( pixelBuffer );
+    let width: UInt = CVPixelBufferGetWidth( pixelBuffer )
+    let height: UInt = CVPixelBufferGetHeight( pixelBuffer )
+    let sourceRowBytes: UInt = CVPixelBufferGetBytesPerRow( pixelBuffer );
+    let sourceBaseAddr: UnsafeMutablePointer<Void>  = CVPixelBufferGetBaseAddress( pixelBuffer );
+    //println("Pixel buffer info - w:\(width) h:\(height) BytesPerRow:\(sourceRowBytes) BaseAddr:\(sourceBaseAddr)")
     
-    CVPixelBufferLockBaseAddress( pixelBuffer, 0 );
-    sourceBaseAddr = CVPixelBufferGetBaseAddress( pixelBuffer );
-    
-    colorspace = CGColorSpaceCreateDeviceRGB();
+    let colorspace = CGColorSpaceCreateDeviceRGB();
+    let context = CGBitmapContextCreate(sourceBaseAddr, width, height, 8, sourceRowBytes, colorspace, bitmapInfo)
+    if (context != nil) {
+        image = CGBitmapContextCreateImage(context)
+    }
+    else {
+        println("CreateCGImageFromCVPixelBuffer():  Failed to create bitmap context")
+    }
+    CVPixelBufferUnlockBaseAddress(pixelBuffer, 0)
     
     // CVPixelBufferRetain( pixelBuffer ); --> Remember to take a retained value when the CVPixelBufferRef is returned from the API
-    let releaseFunc = ReleaseCVPPixelBuffer
-    var releaseFuncUnsafe = UnsafeMutablePointer<(UnsafeMutablePointer<Void>, UnsafePointer<Void>, UInt)->Void>.alloc(1)
-    var releaseFuncOpaque = COpaquePointer(releaseFuncUnsafe)
-    var releaseFuncCPtr = CFunctionPointer<((UnsafeMutablePointer<Void>, UnsafePointer<Void>, UInt) -> Void)>(releaseFuncOpaque)
-    let pixelBufUnsafe = UnsafeMutablePointer<CVPixelBuffer>.alloc(1)
-    pixelBufUnsafe.initialize(pixelBuffer)
+//    let releaseFunc = ReleaseCVPPixelBuffer
+//    var releaseFuncUnsafe = UnsafeMutablePointer<(UnsafeMutablePointer<Void>, UnsafePointer<Void>, UInt)->Void>.alloc(1)
+//    var releaseFuncOpaque = COpaquePointer(releaseFuncUnsafe)
+//    var releaseFuncCPtr = CFunctionPointer<((UnsafeMutablePointer<Void>, UnsafePointer<Void>, UInt) -> Void)>(releaseFuncOpaque)
+//    let pixelBufUnsafe = UnsafeMutablePointer<CVPixelBuffer>.alloc(1)
+//    pixelBufUnsafe.initialize(pixelBuffer)
     
-    provider = CGDataProviderCreateWithData( UnsafeMutablePointer<Void>(pixelBufUnsafe), sourceBaseAddr, sourceRowBytes * height, releaseFuncCPtr);
-    image = CGImageCreate(width, height, 8, 32, sourceRowBytes, colorspace, bitmapInfo, provider, nil, true, kCGRenderingIntentDefault);
+//    let provider = CGDataProviderCreateWithData( UnsafeMutablePointer<Void>(pixelBufUnsafe), sourceBaseAddr, sourceRowBytes * height, releaseFuncCPtr);
+//    image = CGImageCreate(width, height, 8, 32, sourceRowBytes, colorspace, bitmapInfo, provider, nil, true, kCGRenderingIntentDefault);
     return image;
 }
 
@@ -188,27 +191,7 @@ func newSquareOverlayedImageForFeatures (
     var bitmapContext: CGContextRef! = CreateCGBitmapContextForSize(backgroundImageRect.size)
     CGContextClearRect(bitmapContext, backgroundImageRect);
     CGContextDrawImage(bitmapContext, backgroundImageRect, backgroundImage);
-//    var rotationDegrees:CGFloat = CGFloat(0)
-//    
-//    switch (orientation) {
-//    case UIDeviceOrientation.Portrait:
-//        rotationDegrees = -90
-//    case UIDeviceOrientation.PortraitUpsideDown:
-//        rotationDegrees = 90
-//    case UIDeviceOrientation.LandscapeLeft:
-//        if (isFrontFacing) { rotationDegrees = 180 }
-//        else { rotationDegrees = 0 }
-//    case UIDeviceOrientation.LandscapeRight:
-//        if (isFrontFacing) { rotationDegrees = 0 }
-//        else { rotationDegrees = 180 }
-//    case UIDeviceOrientation.FaceUp:
-//        break
-//    case UIDeviceOrientation.FaceDown:
-//        break
-//    default:
-//        break
-//    
-//    }
+
     //  Use dictionaries to look up the rotation corresponding to the given orientation
     if let rotationDegrees = isFrontFacing ?
         kOrientationToDegreesFront[orientation] : kOrientationToDegreesBack[orientation] {

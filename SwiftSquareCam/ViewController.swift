@@ -59,7 +59,7 @@ class ViewController: UIViewController, AVCaptureVideoDataOutputSampleBufferDele
         }
         
         //println("Output settings: \(_imageOutput.outputSettings)")
-        //_imageOutput.addObserver(self, forKeyPath: kCapturingStillImageProp, options: .New, context: &kIsCapturingStillImageContext)
+        _imageOutput.addObserver(self, forKeyPath: kCapturingStillImageProp, options: .New, context: &kIsCapturingStillImageContext)
         
         if _videoSession.canAddOutput(_imageOutput) {
             _videoSession.addOutput(_imageOutput)
@@ -175,25 +175,25 @@ class ViewController: UIViewController, AVCaptureVideoDataOutputSampleBufferDele
     
     
   
-    
+
     //  Performs a flash bulb animation when taking a picture.
     override func observeValueForKeyPath(keyPath:String, ofObject:AnyObject, change:[NSObject:AnyObject], context:UnsafeMutablePointer<Void>) {
-        println("Context: \(context)")
 
         if context == &kIsCapturingStillImageContext {
             if let isCapturing = change[NSKeyValueChangeNewKey]?.boolValue  {
-                _flashView = UIView(frame:previewView.frame)
+
                 if isCapturing {
+                    _flashView = UIView(frame:previewView.frame)
                 // do flash bulb like animation
                     _flashView.backgroundColor = UIColor.whiteColor()
                     _flashView.alpha = 0.0
                     self.view.window?.addSubview(_flashView)
-                    UIView.animateWithDuration(0.4, animations: { () -> Void in
+                    UIView.animateWithDuration(0.2, animations: { () -> Void in
                         self._flashView.alpha = 1.0
                     })
                 }
                 else {
-                    UIView.animateWithDuration(0.4, animations: { () -> Void in
+                    UIView.animateWithDuration(0.2, animations: { () -> Void in
                         self._flashView.alpha = 0.0
                     }, completion: { (Bool finished)-> Void in
                         self._flashView.removeFromSuperview()
@@ -291,7 +291,9 @@ class ViewController: UIViewController, AVCaptureVideoDataOutputSampleBufferDele
         else {
             _imageOutput.outputSettings = [AVVideoCodecKey: AVVideoCodecJPEG]
         }
+        //println("Calling captureStillImageAsynchronouslyFromConnection()...")
         _imageOutput.captureStillImageAsynchronouslyFromConnection(stillImageConnection, completionHandler: { (sampleBuffer, error) -> Void in
+            //println("captureStillImageAsynchronouslyFromConnection completion handlercalled.")
             if (error != nil) {
                 self.displayErrorOnMainQueue(error, message: "Take picture failed")
                 return;
@@ -303,7 +305,7 @@ class ViewController: UIViewController, AVCaptureVideoDataOutputSampleBufferDele
                 var ciImage: CIImage
                 //  Using Unmanaged<T>.takeRetainedValue() tells the compiler to automatically release the reference
                 if let attachments = attachmentsUnmanaged?.takeRetainedValue() {
-                    let opts = NSDictionary(objectsAndKeys: attachments)
+//                    let opts = NSDictionary(objectsAndKeys: attachments)
                     ciImage = CIImage(CVPixelBuffer: pixelBuffer, options: attachments as NSDictionary)
                 }
                 else {
@@ -312,24 +314,26 @@ class ViewController: UIViewController, AVCaptureVideoDataOutputSampleBufferDele
                 var imageOptions: Dictionary<String, NSObject>?
                 let orientationUnmanaged: Unmanaged<AnyObject>! =  CMGetAttachment(sampleBuffer, kCGImagePropertyOrientation, UnsafeMutablePointer<CMAttachmentMode>.null())
                 if let orientation = orientationUnmanaged?.takeUnretainedValue() as? NSNumber {
-                    var imageOptions = [CIDetectorImageOrientation, orientation]
+                    imageOptions = [CIDetectorImageOrientation: orientation]
                 }
-                
+                //println("Queueing image processing routine to drop frames.")
                 // when processing an existing frame we want any new frames to be automatically dropped
                 // queueing this block to execute on the videoDataOutputQueue serial queue ensures this
                 // see the header doc for setSampleBufferDelegate:queue: for more information
-                dispatch_sync(self._videoDataOutputQueue, { () -> Void in
-                    
+//                dispatch_sync(self._videoDataOutputQueue, { () -> Void in
+                    //println("Image processing routine called.")
                     // get the array of CIFeature instances in the given image with a orientation passed in
                     // the detection will be done based on the orientation but the coordinates in the returned features will
                     // still be based on those of the image.
                     let features = self._faceDetector?.featuresInImage(ciImage, options: imageOptions)
+                    //println("Calling CreateCGImageFromCVPixelBuffer()...")
                     var srcImage = CreateCGImageFromCVPixelBuffer(pixelBuffer)
                     if (srcImage == nil) {
                         //  Handle error
                         return
                     }
                     
+                    //println("Calling newSquareOverlayedImageForFeatures()...")
                     let cgImageResult = newSquareOverlayedImageForFeatures(self._squareImage,
                         features as [CIFaceFeature], srcImage, curDevOrientation, self._isUsingFrontFacingCamera)
                     
@@ -340,10 +344,7 @@ class ViewController: UIViewController, AVCaptureVideoDataOutputSampleBufferDele
                     else {
                         // Handle error
                     }
-                    
-                    
-
-                })
+//                })
             
             
             }
@@ -387,8 +388,6 @@ class ViewController: UIViewController, AVCaptureVideoDataOutputSampleBufferDele
             if let attachments:CFDictionary = attachmentsUnmanaged?.takeRetainedValue() {
                 let ciImage = CIImage(CVPixelBuffer: pixelBuffer, options: attachments as NSDictionary)
 
-                //println("image extent: \(ciImage.extent())")
-                
                 let curDeviceOrientation = UIDevice.currentDevice().orientation
                 
                 let exifOrientation: PhotosExif0Row! = _isUsingFrontFacingCamera ? kDeviceOrientationToExifOrientationFront[curDeviceOrientation] : kDeviceOrientationToExifOrientationBack[curDeviceOrientation]
@@ -440,7 +439,9 @@ class ViewController: UIViewController, AVCaptureVideoDataOutputSampleBufferDele
         CATransaction.commit()
 
     }
-
+    
+    //  Draws boxes about each face found by the recognizer.
+    //
     func drawFaceBoxesForFeatures(features: [AnyObject], clap: CGRect, orientation: UIDeviceOrientation) -> Void
     {
         let sublayers = _previewLayer.sublayers as [CALayer]
@@ -490,7 +491,7 @@ class ViewController: UIViewController, AVCaptureVideoDataOutputSampleBufferDele
                 
                 --                                      --
                 |  0            scaleWidth          0    |
-                |  scaleHeight      0               0 |
+                |  scaleHeight      0               0    |
                 |  0                0               1    |
                 --                                     --
                 
@@ -520,9 +521,9 @@ class ViewController: UIViewController, AVCaptureVideoDataOutputSampleBufferDele
                
                 var featureLayer: CALayer!
                 
-                // re-use an existing layer if possible
+                // Reuse an existing hidden layer if possible
                 for layer in sublayers {
-                    if layer.name? == kFaceLayerName {
+                    if layer.name? == kFaceLayerName && layer.hidden {
                         featureLayer = layer
                         layer.hidden = false
                     }
@@ -539,23 +540,24 @@ class ViewController: UIViewController, AVCaptureVideoDataOutputSampleBufferDele
                 featureLayer.frame = faceRect
                 //println("Set face rect to \(faceRect)")
                 
-//                switch orientation {
-//                case .Portrait:
-//                    featureLayer.setAffineTransform(RotationTransform(0.0))
-//                case .PortraitUpsideDown:
-//                    featureLayer.setAffineTransform(RotationTransform(180.0))
-//                case .LandscapeLeft:
-//                    featureLayer.setAffineTransform(RotationTransform(90.0))
-//                case .LandscapeRight:
-//                    featureLayer.setAffineTransform(RotationTransform(-90.0))
-//                case .FaceUp:
-//                    break
-//                case .FaceDown:
-//                    break
-//                default:
-//                    break
-//                    
-//                }
+                //  Transform for the orientation of the device.
+                switch orientation {
+                case .Portrait:
+                    featureLayer.setAffineTransform(RotationTransform(0.0))
+                case .PortraitUpsideDown:
+                    featureLayer.setAffineTransform(RotationTransform(180.0))
+                case .LandscapeLeft:
+                    featureLayer.setAffineTransform(RotationTransform(90.0))
+                case .LandscapeRight:
+                    featureLayer.setAffineTransform(RotationTransform(-90.0))
+                case .FaceUp:
+                    break
+                case .FaceDown:
+                    break
+                default:
+                    break
+                    
+                }
 
             } // END for each face feature
             
