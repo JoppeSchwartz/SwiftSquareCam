@@ -47,6 +47,15 @@ class ViewController: UIViewController, AVCaptureVideoDataOutputSampleBufferDele
         if (_cameraDevice == nil) {
             fatalError("Error: Failed to obtain interface to camera.")
         }
+        var errPtr: NSError?
+        if _cameraDevice.lockForConfiguration(&errPtr) {
+            if _cameraDevice.lowLightBoostSupported {
+                _cameraDevice.automaticallyEnablesLowLightBoostWhenAvailable = true
+            }
+            _cameraDevice.unlockForConfiguration()
+        } else {
+            println("Could not lock camera for configuration.")
+        }
         var err: NSErrorPointer = nil
         var deviceInput: AVCaptureDeviceInput = AVCaptureDeviceInput.deviceInputWithDevice(_cameraDevice, error:err) as AVCaptureDeviceInput
         assert (err==nil)
@@ -99,28 +108,11 @@ class ViewController: UIViewController, AVCaptureVideoDataOutputSampleBufferDele
         _previewLayer.backgroundColor = UIColor.blackColor().CGColor
         _previewLayer.videoGravity = AVLayerVideoGravityResizeAspectFill
         
-//        let rootLayer = previewView.layer
-//        rootLayer.masksToBounds = true
-//        let bounds = rootLayer.bounds
-//
-//        self.view.layoutIfNeeded()
-//        //_previewLayer.frame = bounds
-//        _previewLayer.bounds = bounds
-////        self.view.layoutIfNeeded()
-//        println("setupAVSession\n----------------------")
-//        println("Root layer bounds: \(rootLayer.bounds)")
-//        println("Preview layer bounds: \(_previewLayer.bounds)")
-//        println("Preview view frame: \(previewView.frame)")
-        
-        
         //_avConnection = _videoDataOutput.connectionWithMediaType(AVMediaTypeVideo)
         _avConnection = _previewLayer.connection
         
-//        println("Connection.supportsVideoOrientation = \(_avConnection.supportsVideoOrientation)")
-
         //  Start the video session
         _videoSession.startRunning()
-//        statusLabel.text = "Running..."
 
     }
     
@@ -150,6 +142,7 @@ class ViewController: UIViewController, AVCaptureVideoDataOutputSampleBufferDele
 
     }
     
+    //  Need to finish setting up the preview layer here because that's when the layout is responsive.
     override func viewWillAppear(animated: Bool) {
         
         self.view.layoutIfNeeded()
@@ -157,12 +150,6 @@ class ViewController: UIViewController, AVCaptureVideoDataOutputSampleBufferDele
         rootLayer.masksToBounds = true
         let bounds = rootLayer.bounds
         _previewLayer.frame = bounds
-        //_previewLayer.bounds = bounds
-        //        self.view.layoutIfNeeded()
-        println("viewWillAppear\n----------------------")
-        println("Root layer bounds: \(rootLayer.bounds)")
-        println("Preview layer bounds: \(_previewLayer.bounds)")
-        println("Preview view frame: \(previewView.frame)")
         rootLayer.addSublayer(_previewLayer)
 
     }
@@ -390,7 +377,8 @@ class ViewController: UIViewController, AVCaptureVideoDataOutputSampleBufferDele
 
                 let curDeviceOrientation = UIDevice.currentDevice().orientation
                 
-                let exifOrientation: PhotosExif0Row! = _isUsingFrontFacingCamera ? kDeviceOrientationToExifOrientationFront[curDeviceOrientation] : kDeviceOrientationToExifOrientationBack[curDeviceOrientation]
+//                let exifOrientation: PhotosExif0Row! = _isUsingFrontFacingCamera ? kDeviceOrientationToExifOrientationFront[curDeviceOrientation] : kDeviceOrientationToExifOrientationBack[curDeviceOrientation]
+                let exifOrientation: PhotosExif0Row! = kDeviceOrientationToExifOrientation[_isUsingFrontFacingCamera]?[curDeviceOrientation]
                 if (exifOrientation == nil) {
                     //  Handle error
                     println("Could not get exif orientation for device orientation \(curDeviceOrientation.toRaw())")

@@ -64,6 +64,13 @@ let kDeviceOrientationToExifOrientationBack: [UIDeviceOrientation: PhotosExif0Ro
     .LandscapeRight: .BOTTOM_0COL_RIGHT
 ]
 
+//  Maps a Bool, representing whether the front facing camera is being used, to the correct
+//  dictionary that itself maps the device orientation to the correcnt EXIF orientation.
+let kDeviceOrientationToExifOrientation: [Bool: [UIDeviceOrientation: PhotosExif0Row]] = [
+    true: kDeviceOrientationToExifOrientationFront,
+    false: kDeviceOrientationToExifOrientationBack
+]
+
 func DegreesToRadians(degrees:CGFloat) -> CGFloat {
     return degrees * CGFloat(M_PI) / CGFloat(180.0)
 }
@@ -71,16 +78,6 @@ func DegreesToRadians(degrees:CGFloat) -> CGFloat {
 func RotationTransform(degrees:Float) -> CGAffineTransform
 {
     return CGAffineTransformMakeRotation(DegreesToRadians(CGFloat(degrees)))
-}
-
-
-func ReleaseCVPPixelBuffer (pixel:UnsafeMutablePointer<Void>, data:UnsafePointer<Void>, size:UInt) {
-    let pixelBufPtr = UnsafeMutablePointer<CVPixelBuffer>(pixel)
-    var pixelBuffer: CVPixelBufferRef = pixelBufPtr.memory
-    CVPixelBufferUnlockBaseAddress(pixelBuffer, 0)
-    pixelBufPtr.destroy()
-    pixelBufPtr.dealloc(1)
-    //CVPixelBufferRelease(pixelBuffer)     --  not needed with ARC
 }
 
 
@@ -119,16 +116,6 @@ func CreateCGImageFromCVPixelBuffer(pixelBuffer:CVPixelBufferRef) -> CGImage!
     }
     CVPixelBufferUnlockBaseAddress(pixelBuffer, 0)
     
-    // CVPixelBufferRetain( pixelBuffer ); --> Remember to take a retained value when the CVPixelBufferRef is returned from the API
-//    let releaseFunc = ReleaseCVPPixelBuffer
-//    var releaseFuncUnsafe = UnsafeMutablePointer<(UnsafeMutablePointer<Void>, UnsafePointer<Void>, UInt)->Void>.alloc(1)
-//    var releaseFuncOpaque = COpaquePointer(releaseFuncUnsafe)
-//    var releaseFuncCPtr = CFunctionPointer<((UnsafeMutablePointer<Void>, UnsafePointer<Void>, UInt) -> Void)>(releaseFuncOpaque)
-//    let pixelBufUnsafe = UnsafeMutablePointer<CVPixelBuffer>.alloc(1)
-//    pixelBufUnsafe.initialize(pixelBuffer)
-    
-//    let provider = CGDataProviderCreateWithData( UnsafeMutablePointer<Void>(pixelBufUnsafe), sourceBaseAddr, sourceRowBytes * height, releaseFuncCPtr);
-//    image = CGImageCreate(width, height, 8, 32, sourceRowBytes, colorspace, bitmapInfo, provider, nil, true, kCGRenderingIntentDefault);
     return image;
 }
 
@@ -142,14 +129,12 @@ func CreateCGBitmapContextForSize(size: CGSize) -> CGContextRef
     let context = CGBitmapContextCreate(nil, UInt(size.width), UInt(size.height), bitsPerComponent, bytesPerRow, colorSpace, bitmapInfo)
     
     CGContextSetAllowsAntialiasing(context, false);
-    //CGColorSpaceRelease( colorSpace );   -- Unnecessary with ARC
     return context;
 }
 
 extension UIImage {
     func imageRotatedByDegrees(degrees:CGFloat) -> UIImage {
         // calculate the size of the rotated view's containing box for our drawing space
-        //UIView *rotatedViewBox = [[UIView alloc] initWithFrame:CGRectMake(0,0,self.size.width, self.size.height)];
         let rotatedViewBox = UIView(frame: CGRectMake(0, 0, self.size.width, self.size.height))
         let t: CGAffineTransform = CGAffineTransformMakeRotation(DegreesToRadians(degrees));
         rotatedViewBox.transform = t;
@@ -163,7 +148,7 @@ extension UIImage {
         // Move the origin to the middle of the image so we will rotate and scale around the center.
         CGContextTranslateCTM(bitmap, rotatedSize.width/2, rotatedSize.height/2);
         
-        //   // Rotate the image context
+        // Rotate the image context
         CGContextRotateCTM(bitmap, DegreesToRadians(degrees));
         
         // Now, draw the rotated/scaled image into the context
@@ -235,51 +220,3 @@ func writeCGImageToCameraRoll (cgImage: CGImageRef, metadata: CFDictionary) -> B
     return success;
 }
 
-
-func videoPreviewBoxForGravity(gravity: String, frameSize: CGSize, apertureSize: CGSize) -> CGRect
-{
-    let apertureRatio = CGFloat(apertureSize.height / apertureSize.width);
-    let viewRatio: CGFloat = frameSize.width / frameSize.height;
-    
-    var size = CGSize.zeroSize
-    switch (gravity) {
-    case AVLayerVideoGravityResizeAspectFill:
-        if (viewRatio > apertureRatio) {
-            size.width = frameSize.width
-            size.height = apertureSize.width * (frameSize.width / apertureSize.height)
-        } else {
-            size.width = apertureSize.height * (frameSize.height / apertureSize.width)
-            size.height = frameSize.height
-        }
-    case AVLayerVideoGravityResizeAspect:
-        if (viewRatio > apertureRatio) {
-            size.width = apertureSize.height * (frameSize.height / apertureSize.width)
-            size.height = frameSize.height
-        } else {
-            size.width = frameSize.width
-            size.height = apertureSize.width * (frameSize.width / apertureSize.height)
-        }
-    case AVLayerVideoGravityResize:
-        size.width = frameSize.width
-        size.height = frameSize.height
-    default:
-        break
-    }
-    
-    var videoBox = CGRect()
-    videoBox.size = size
-    if (size.width < frameSize.width) {
-        videoBox.origin.x = (frameSize.width - size.width) / 2
-    }
-    else {
-        videoBox.origin.x = (size.width - frameSize.width) / 2
-    }
-    
-    if ( size.height < frameSize.height ) {
-        videoBox.origin.y = (frameSize.height - size.height) / 2
-    }
-    else {
-        videoBox.origin.y = (size.height - frameSize.height) / 2
-    }
-    return videoBox
-}
