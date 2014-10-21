@@ -118,9 +118,9 @@ class ViewController: UIViewController, AVCaptureVideoDataOutputSampleBufferDele
     
   
     func takedownVideoSession() {
-        if _videoDataOutputQueue != nil {
-            dispatch_release(_videoDataOutputQueue)
-        }
+//        if _videoDataOutputQueue != nil {
+//            dispatch_release(_videoDataOutputQueue)
+//        }
         _imageOutput.removeObserver(self, forKeyPath: kCapturingStillImageProp)
         if _videoSession != nil {
             _videoSession.stopRunning()
@@ -321,7 +321,7 @@ class ViewController: UIViewController, AVCaptureVideoDataOutputSampleBufferDele
                     }
                     
                     //println("Calling newSquareOverlayedImageForFeatures()...")
-                    let cgImageResult = newSquareOverlayedImageForFeatures(self._squareImage,
+                    let cgImageResult = newSquareOverlayedImageForFeatures(self._squareImage!,
                         features as [CIFaceFeature], srcImage, curDevOrientation, self._isUsingFrontFacingCamera)
                     
                     let attachmentsRes: Unmanaged<CFDictionary>? = CMCopyDictionaryOfAttachments(kCFAllocatorDefault, sampleBuffer, CMAttachmentMode(kCMAttachmentMode_ShouldPropagate))
@@ -381,10 +381,10 @@ class ViewController: UIViewController, AVCaptureVideoDataOutputSampleBufferDele
                 let exifOrientation: PhotosExif0Row! = kDeviceOrientationToExifOrientation[_isUsingFrontFacingCamera]?[curDeviceOrientation]
                 if (exifOrientation == nil) {
                     //  Handle error
-                    println("Could not get exif orientation for device orientation \(curDeviceOrientation.toRaw())")
+                    println("Could not get exif orientation for device orientation \(curDeviceOrientation.rawValue)")
                     return
                 }
-                let imageOptions = [CIDetectorImageOrientation: exifOrientation.toRaw()]
+                let imageOptions = [CIDetectorImageOrientation: exifOrientation.rawValue]
                 
                 let features = _faceDetector != nil ? _faceDetector.featuresInImage(ciImage, options: imageOptions) : []
                 
@@ -521,7 +521,7 @@ class ViewController: UIViewController, AVCaptureVideoDataOutputSampleBufferDele
                 // create a new layer if necessary
                 if (featureLayer == nil) {
                     featureLayer = CALayer()
-                    featureLayer.contents = _squareImage.CGImage
+                    featureLayer.contents = _squareImage!.CGImage
                     featureLayer.name = kFaceLayerName
                     _previewLayer.addSublayer(featureLayer)
                 }

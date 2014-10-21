@@ -91,10 +91,10 @@ func CreateCGImageFromCVPixelBuffer(pixelBuffer:CVPixelBufferRef) -> CGImage!
     CVPixelBufferLockBaseAddress( pixelBuffer, 0 );
     var sourcePixelFormat: OSType = CVPixelBufferGetPixelFormatType( pixelBuffer )
     if ( kCVPixelFormatType_32ARGB == Int(sourcePixelFormat) ) {
-        bitmapInfo = CGBitmapInfo(CGBitmapInfo.ByteOrder32Big.toRaw() | CGImageAlphaInfo.NoneSkipFirst.toRaw())
+        bitmapInfo = CGBitmapInfo(CGBitmapInfo.ByteOrder32Big.rawValue | CGImageAlphaInfo.NoneSkipFirst.rawValue)
     }
     else if ( kCVPixelFormatType_32BGRA == Int(sourcePixelFormat) ) {
-        bitmapInfo = CGBitmapInfo(CGBitmapInfo.ByteOrder32Little.toRaw() | CGImageAlphaInfo.NoneSkipFirst.toRaw())
+        bitmapInfo = CGBitmapInfo(CGBitmapInfo.ByteOrder32Little.rawValue | CGImageAlphaInfo.NoneSkipFirst.rawValue)
     }
     else {
         return nil // -95014; // only uncompressed pixel formats
@@ -125,7 +125,7 @@ func CreateCGBitmapContextForSize(size: CGSize) -> CGContextRef
     let bytesPerRow: UInt = UInt(size.width) * 4
     let bitsPerComponent: UInt = 8
   
-    let bitmapInfo = CGBitmapInfo(CGImageAlphaInfo.PremultipliedLast.toRaw())
+    let bitmapInfo = CGBitmapInfo(CGImageAlphaInfo.PremultipliedLast.rawValue)
     let context = CGBitmapContextCreate(nil, UInt(size.width), UInt(size.height), bitsPerComponent, bytesPerRow, colorSpace, bitmapInfo)
     
     CGContextSetAllowsAntialiasing(context, false);
@@ -188,7 +188,7 @@ func newSquareOverlayedImageForFeatures (
             let faceRect = ff.bounds
             CGContextDrawImage(bitmapContext, faceRect, rotatedSquareImage.CGImage);
         }
-        returnImage = CGBitmapContextCreateImage(bitmapContext);
+        returnImage = CGBitmapContextCreateImage(bitmapContext)
         //CGContextRelease (bitmapContext);
         
 
@@ -199,18 +199,25 @@ func newSquareOverlayedImageForFeatures (
 // utility routine used after taking a still image to write the resulting image to the camera roll
 func writeCGImageToCameraRoll (cgImage: CGImageRef, metadata: CFDictionary) -> Bool
 {
-    var destinationData: CFMutableDataRef = CFDataCreateMutable(kCFAllocatorDefault, 0);
+    var destinationData: CFMutableDataRef = CFDataCreateMutable(kCFAllocatorDefault, 0)
 
     let destination: CGImageDestinationRef! = CGImageDestinationCreateWithData(destinationData,
         "public.jpeg",
         1,
-        nil);
+        nil)
     assert(destination != nil)
     
     let JPEGCompQuality: Float = 0.85 // JPEGHigherQuality
-    let optionsDict = [kCGImageDestinationLossyCompressionQuality: JPEGCompQuality]
-    CGImageDestinationAddImage( destination, cgImage, optionsDict );
-    var success = CGImageDestinationFinalize( destination );
+    //  The following no longer works in XCode 6.1; the CFString! type is not hashable.
+    //let optionsDict = [kCGImageDestinationLossyCompressionQuality: JPEGCompQuality]
+    var key: NSString = kCGImageDestinationLossyCompressionQuality
+    let optionsDict = [key: JPEGCompQuality]
+//    var keys: UnsafeMutablePointer<UnsafePointer<Void>>
+//    var key = kCGImageDestinationLossyCompressionQuality as UnsafePointer<Void>
+//    var val:Float = JPEGCompQuality
+//    var optionsDict: CFDictionary! = CFDictionaryCreate(kCFAllocatorDefault, &key, &val, 1, nil, nil)
+    CGImageDestinationAddImage( destination, cgImage, optionsDict )
+    var success = CGImageDestinationFinalize( destination )
     
     assert(success == true)
     
